@@ -1,4 +1,4 @@
-use std::io::Read;
+#![doc = include_str!("../README.md")]
 
 use sqlparser::{ast::Statement, parser::Parser};
 
