@@ -4,5 +4,4 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-ruff_formatter = { git = "https://github.com/astral-sh/ruff", version = "0.0.0" }
 sqlparser = "0.34.0"
