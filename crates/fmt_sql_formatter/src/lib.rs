@@ -2,6 +2,9 @@
 
 use sqlparser::{ast::Statement, parser::Parser};
 
+const DEFAULT_LINE_LENGTH: usize = 88;
+const DEFAULT_INDENTATION_KIND: IntentationKind = IntentationKind::Indent;
+
 #[derive(Default)]
 struct Formatter {
     options: FormatterOptions,
@@ -59,8 +62,8 @@ struct FormatterOptions {
 impl Default for FormatterOptions {
     fn default() -> Self {
         Self {
-            line_length: 88,
-            indentation_kind: IntentationKind::Indent,
+            line_length: DEFAULT_LINE_LENGTH,
+            indentation_kind: DEFAULT_INDENTATION_KIND,
         }
     }
 }
