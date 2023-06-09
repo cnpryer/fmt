@@ -18,6 +18,14 @@ impl Formatter {
     fn into_code(self) -> String {
         self.generator.generate_code()
     }
+
+    /// Create a formatter from `FormatterOptions`.
+    fn from_options(options: FormatterOptions) -> Formatter {
+        Formatter {
+            options,
+            ..Default::default()
+        }
+    }
 }
 
 /// `CodeGenerator` is used to generate source code from SQL statements.
@@ -78,11 +86,7 @@ pub fn format(s: &str) -> String {
 }
 
 fn format_statements(statements: Vec<Statement>, formatter_options: FormatterOptions) -> String {
-    let mut formatter = Formatter {
-        options: formatter_options,
-        generator: CodeGenerator { bytes: Vec::new() },
-        current_context: FormatContext::default(),
-    };
+    let mut formatter = Formatter::from_options(formatter_options);
 
     statements
         .into_iter()
