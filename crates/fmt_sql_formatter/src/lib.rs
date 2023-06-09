@@ -20,10 +20,6 @@ impl Formatter {
     }
 }
 
-struct Node {
-    statements: Vec<Statement>, // TODO(cnpryer)
-}
-
 /// `CodeGenerator` is used to generate source code from SQL statements.
 #[derive(Default)]
 struct CodeGenerator {
@@ -73,24 +69,22 @@ enum IntentationKind {
 }
 
 pub fn format(s: &str) -> String {
-    let node = match Parser::new(&sqlparser::dialect::MsSqlDialect {}).try_with_sql(s) {
-        Ok(mut parser) => Node {
-            statements: parser.parse_statements().expect("parse sql statements"),
-        },
+    let statements = match Parser::new(&sqlparser::dialect::MsSqlDialect {}).try_with_sql(s) {
+        Ok(mut parser) => parser.parse_statements().expect("parse sql statements"),
         Err(_) => panic!("failed to parse sql ast"),
     };
 
-    format_node(node, FormatterOptions::default())
+    format_statements(statements, FormatterOptions::default())
 }
 
-fn format_node(root: Node, formatter_options: FormatterOptions) -> String {
+fn format_statements(statements: Vec<Statement>, formatter_options: FormatterOptions) -> String {
     let mut formatter = Formatter {
         options: formatter_options,
         generator: CodeGenerator { bytes: Vec::new() },
         current_context: FormatContext::default(),
     };
 
-    root.statements
+    statements
         .into_iter()
         .for_each(|stmt| formatter.push_statement(stmt));
 
