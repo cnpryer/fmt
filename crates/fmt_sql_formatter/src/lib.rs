@@ -127,3 +127,32 @@ fn format_statements(statements: Vec<Statement>, formatter_options: FormatterOpt
         .with_statements(statements)
         .into_code()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn test_one_liner() {
+        let s = "select top 10 * from table";
+        let expected = r"SELECT TOP 10 * FROM [table]";
+        assert_eq!(format(s), expected);
+    }
+
+    fn test_basic() {
+        let s = "select a, b, c, d from table1 join table2 on table1.id = table2.id and table1.other_id = table2.other_id where table1.name = 'something'";
+        let expected = r#"SELECT
+    [a],
+    [b],
+    [c],
+    [d]
+FROM
+    [table1]
+    JOIN [table2] ON (
+        [table1].[id] = [table1].[id]
+        AND [table1].[other_id] = [table2].[other_id]
+    )
+WHERE
+    [table1].[name] = 'something'"#;
+        assert_eq!(format(s), expected);
+    }
+}
