@@ -1,118 +1,26 @@
 #![doc = include_str!("../README.md")]
 
+use formatter::Formatter;
+pub use formatter::FormatterOptions;
 use sqlparser::{ast::Statement, parser::Parser};
 
-const DEFAULT_LINE_LENGTH: usize = 88;
-const DEFAULT_INDENTATION_KIND: IntentationKind = IntentationKind::Indent;
-
-#[derive(Default)]
-struct Formatter {
-    options: FormatterOptions,
-    generator: CodeGenerator,
-    current_context: FormatContext,
-}
-
-impl Formatter {
-    /// Get `String` of generated source code.
-    pub fn into_code(self) -> String {
-        self.generator.into_code()
-    }
-
-    /// Create a formatter from `FormatterOptions`.
-    pub fn from_options(options: FormatterOptions) -> Formatter {
-        Formatter {
-            options,
-            ..Default::default()
-        }
-    }
-
-    /// Generate formated `sqlparser::ast::Statement`s.
-    pub fn with_statements(mut self, statements: Vec<Statement>) -> Formatter {
-        self.generator
-            .push_bytes(self.format_statements(statements));
-        self
-    }
-
-    // TODO(cnpryer)
-    fn format_statements(&self, statements: Vec<Statement>) -> Vec<u8> {
-        let mut bytes = Vec::new();
-        statements.into_iter().for_each(|stmt| {
-            let sep = self.next_statement_sep(&stmt);
-            bytes.extend(self.format_statement(stmt));
-            bytes.extend(sep);
-        });
-        bytes
-    }
-
-    fn format_statement(&self, stmt: Statement) -> Vec<u8> {
-        todo!()
-    }
-
-    fn next_statement_sep(&self, stmt: &Statement) -> Vec<u8> {
-        todo!()
-    }
-}
-
-/// `CodeGenerator` is used to generate SQL statements as source code.
-#[derive(Default)]
-struct CodeGenerator {
-    bytes: Vec<u8>,
-}
-
-impl CodeGenerator {
-    /// Push a byte to the generated code.
-    fn push(&mut self, b: u8) {
-        self.bytes.push(b);
-    }
-
-    /// Pushes bytes to the generated code.
-    fn push_bytes(&mut self, bytes: Vec<u8>) {
-        bytes.into_iter().for_each(|b| self.push(b))
-    }
-
-    /// Move into a `String` of the current generated code.
-    pub fn into_code(self) -> String {
-        unsafe { String::from_utf8_unchecked(self.bytes) }
-    }
-}
-
-#[derive(PartialEq, Eq)]
-pub struct FormatterOptions {
-    line_length: usize,
-    indentation_kind: IntentationKind,
-}
-
-impl Default for FormatterOptions {
-    fn default() -> Self {
-        Self {
-            line_length: DEFAULT_LINE_LENGTH,
-            indentation_kind: DEFAULT_INDENTATION_KIND,
-        }
-    }
-}
-
-#[derive(Default)]
-struct FormatContext {
-    needs_semicolon: bool,
-    current_indentation: u8,
-}
-
-#[derive(PartialEq, Eq)]
-enum IntentationKind {
-    Indent,
-    Space,
-}
+mod formatter;
+mod generator;
 
 // TODO(cnpryer): Allow comments https://github.com/cnpryer/fmt/issues/1
 //   Ruff uses CommentRanges to manage formatting code containing comments.
 pub fn format(s: &str) -> String {
+    let mut formatter = Formatter::new(FormatterOptions::default());
     let statements = parse_statements(s);
-    format_statements(statements, FormatterOptions::default())
+    formatter.format(statements);
+    formatter.into_code()
 }
 
 pub fn format_with_options(s: &str, options: FormatterOptions) -> String {
+    let mut formatter = Formatter::new(options);
     let statements = parse_statements(s);
-    format_statements(statements, options)
+    formatter.format(statements);
+    formatter.into_code()
 }
 
 fn parse_statements(s: &str) -> Vec<Statement> {
@@ -120,12 +28,6 @@ fn parse_statements(s: &str) -> Vec<Statement> {
         Ok(mut parser) => parser.parse_statements().expect("parse sql statements"),
         Err(_) => panic!("failed to parse sql ast"),
     }
-}
-
-fn format_statements(statements: Vec<Statement>, formatter_options: FormatterOptions) -> String {
-    Formatter::from_options(formatter_options)
-        .with_statements(statements)
-        .into_code()
 }
 
 #[cfg(test)]
